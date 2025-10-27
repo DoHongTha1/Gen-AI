@@ -1,5 +1,5 @@
 // src/models/XGBoostModel.js
-export default class XGBoostModel {
+class XGBoostModel {
   constructor(config = {}) {
     this.numTrees = config.numTrees || 50;
     this.learningRate = config.learningRate || 0.1;
@@ -14,17 +14,7 @@ export default class XGBoostModel {
 
   static prepareTrainingData(countriesData) {
     const trainingData = [];
-    const featureNames = [
-      'birthRate',
-      'deathRate',
-      'gdpPerCapita',
-      'urbanization',
-      'educationIndex',
-      'healthcareSpending',
-      'fertilityRate',
-      'medianAge',
-      'lifeExpectancy'
-    ];
+    const featureNames = ['birthRate', 'deathRate', 'gdpPerCapita', 'urbanization', 'educationIndex', 'healthcareSpending', 'fertilityRate', 'medianAge', 'lifeExpectancy'];
 
     Object.values(countriesData).forEach(country => {
       const history = country.historicalData;
@@ -98,9 +88,12 @@ export default class XGBoostModel {
             rightResiduals.push(residuals[idx]);
           }
         });
-        if (leftResiduals.length < this.minSamplesLeaf || rightResiduals.length < this.minSamplesLeaf) return;
+        if (leftResiduals.length < this.minSamplesLeaf || rightResiduals.length < this.minSamplesLeaf) continue;
         const gain = this.calculateGain(residuals, leftResiduals, rightResiduals);
-        if (gain > bestGain) bestSplit = { feature: featureIdx, threshold, gain }, bestGain = gain;
+        if (gain > bestGain) {
+          bestGain = gain;
+          bestSplit = { feature: featureIdx, threshold, gain };
+        }
       }
     });
     return bestSplit;
@@ -116,21 +109,23 @@ export default class XGBoostModel {
   }
 
   variance(arr) {
-    if (!arr.length) return 0;
+    if (arr.length === 0) return 0;
     const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
     return arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / arr.length;
   }
 
   randomSubset(arr, size) {
-    const shuffled = arr.slice().sort(() => 0.5 - Math.random());
+    const shuffled = arr.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, size);
   }
 
   predictTree(tree, features) {
     if (tree.isLeaf) return tree.value;
-    return features[tree.feature] <= tree.threshold
-      ? this.predictTree(tree.left, features)
-      : this.predictTree(tree.right, features);
+    if (features[tree.feature] <= tree.threshold) {
+      return this.predictTree(tree.left, features);
+    } else {
+      return this.predictTree(tree.right, features);
+    }
   }
 
   train(countriesData) {
@@ -148,7 +143,10 @@ export default class XGBoostModel {
       const subsampledResiduals = indices.map(i => residuals[i]);
       const tree = this.buildTree(subsampledData, subsampledResiduals);
       this.trees.push(tree);
-      predictions = predictions.map((pred, i) => pred + this.learningRate * this.predictTree(tree, data[i].features));
+      predictions = predictions.map((pred, i) => {
+        const treeOutput = this.predictTree(tree, data[i].features);
+        return pred + this.learningRate * treeOutput;
+      });
       this.updateFeatureImportance(tree, featureNames);
     }
 
@@ -173,7 +171,8 @@ export default class XGBoostModel {
     if (!this.isTrained) throw new Error('Model chưa được huấn luyện!');
     let prediction = 0;
     this.trees.forEach(tree => {
-      prediction += this.learningRate * this.predictTree(tree, features);
+      const treeOutput = this.predictTree(tree, features);
+      prediction += this.learningRate * treeOutput;
     });
     return prediction;
   }
@@ -194,3 +193,5 @@ export default class XGBoostModel {
     return 1 - (ssResidual / ssTotal);
   }
 }
+
+export default XGBoostModel;

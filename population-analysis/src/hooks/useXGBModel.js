@@ -8,8 +8,6 @@ export function useXGBModel(countriesData) {
   const [trainingProgress, setTrainingProgress] = useState(0);
 
   useEffect(() => {
-    let mounted = true;
-
     const trainModel = async () => {
       setIsTraining(true);
       setTrainingProgress(10);
@@ -21,21 +19,18 @@ export function useXGBModel(countriesData) {
         const model = new XGBoostModel({ numTrees: 50, learningRate: 0.1, maxDepth: 6, minSamplesLeaf: 3, subsampleRate: 0.8 });
         await new Promise(resolve => setTimeout(resolve, 100));
         model.train(countriesData);
-        if (!mounted) return;
         setAiModel(model);
         setTrainingProgress(100);
         clearInterval(progressInterval);
-        setTimeout(() => mounted && setIsTraining(false), 500);
+        setTimeout(() => setIsTraining(false), 500);
       } catch (error) {
         console.error('Training error:', error);
         clearInterval(progressInterval);
         setIsTraining(false);
       }
     };
-
     trainModel();
-    return () => { mounted = false; };
   }, [countriesData]);
 
-  return { aiModel, isTraining, trainingProgress };
+  return { aiModel, isTraining, trainingProgress, setAiModel, setIsTraining, setTrainingProgress };
 }

@@ -15,6 +15,7 @@ export default function ChatBox() {
     setMessages(newMessages);
     const userQuestion = input;
     setInput('');
+
     setTimeout(() => {
       const botReply = getBotReply(userQuestion);
       setMessages([...newMessages, { text: botReply, sender: 'bot' }]);

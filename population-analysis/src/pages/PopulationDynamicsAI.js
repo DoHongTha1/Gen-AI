@@ -1,5 +1,8 @@
 // src/pages/PopulationDynamicsAI.jsx
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
+import { TrendingUp, Users, Activity, MapPin, Globe, Cpu } from 'lucide-react';
+
 import { countriesData } from '../data/countries';
 import { useXGBModel } from '../hooks/useXGBModel';
 import { buildForecast } from '../utils/forecast';
@@ -13,9 +16,6 @@ import ComparisonCharts from '../components/charts/ComparisonCharts';
 import AIInsights from '../components/AIInsights';
 import ChatBox from '../components/ChatBox';
 
-import { Users, TrendingUp, Activity, Globe, Cpu, MapPin } from 'lucide-react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, CartesianGrid, XAxis, YAxis, Legend } from 'recharts';
-
 export default function PopulationDynamicsAI() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedCountry, setSelectedCountry] = useState('vietnam');
@@ -26,23 +26,21 @@ export default function PopulationDynamicsAI() {
   const { aiModel, isTraining, trainingProgress } = useXGBModel(countriesData);
 
   const currentData = countriesData[selectedCountry];
-  const effectiveBirthRate = customBirthRate ?? currentData.birthRate;
-  const effectiveDeathRate = customDeathRate ?? currentData.deathRate;
+  const effectiveBirthRate = customBirthRate !== null ? customBirthRate : currentData.birthRate;
+  const effectiveDeathRate = customDeathRate !== null ? customDeathRate : currentData.deathRate;
 
-  const forecastData = useMemo(
-    () => buildForecast(aiModel, currentData, forecastYears, effectiveBirthRate, effectiveDeathRate),
-    [aiModel, currentData, forecastYears, effectiveBirthRate, effectiveDeathRate]
-  );
+  const forecastData = useMemo(() => 
+    buildForecast(aiModel, currentData, forecastYears, effectiveBirthRate, effectiveDeathRate),
+  [aiModel, currentData, forecastYears, effectiveBirthRate, effectiveDeathRate]);
 
-  const comparisonData = Object.entries(countriesData).map(([_, data]) => ({
-    country: data.name, population: Math.round(data.population / 1e6),
-    growthRate: data.growthRate, medianAge: data.medianAge, birthRate: data.birthRate, deathRate: data.deathRate
+  const comparisonData = Object.entries(countriesData).map(([key, data]) => ({
+    country: data.name, population: Math.round(data.population / 1000000), growthRate: data.growthRate,
+    medianAge: data.medianAge, birthRate: data.birthRate, deathRate: data.deathRate
   }));
 
-  const featureImportanceData = aiModel?.featureImportance
-    ? Object.entries(aiModel.featureImportance).sort((a, b) => b[1] - a[1]).slice(0, 7)
-        .map(([name, value]) => ({ feature: name, importance: Math.round(value) }))
-    : [];
+  const featureImportanceData = aiModel && aiModel.featureImportance ? 
+    Object.entries(aiModel.featureImportance).sort((a, b) => b[1] - a[1]).slice(0, 7)
+      .map(([name, value]) => ({ feature: name, importance: Math.round(value) })) : [];
 
   const resetCustomValues = () => {
     setCustomBirthRate(null);
@@ -64,7 +62,7 @@ export default function PopulationDynamicsAI() {
     <>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 pb-24">
         <div className="max-w-7xl mx-auto">
-          <HeaderStatus isTraining={isTraining} progress={trainingProgress} aiModel={aiModel} />
+          <HeaderStatus isTraining={isTraining} trainingProgress={trainingProgress} aiModel={aiModel} />
 
           {/* Chọn quốc gia */}
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -90,13 +88,12 @@ export default function PopulationDynamicsAI() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 space-y-6">
-              {/* Thống kê hiện tại */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Thống Kê Hiện Tại</h2>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                     <span className="text-gray-700 font-medium">Dân số</span>
-                    <span className="text-blue-600 font-bold">{(currentData.population / 1e6).toFixed(1)}M</span>
+                    <span className="text-blue-600 font-bold">{(currentData.population / 1000000).toFixed(1)}M</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                     <span className="text-gray-700 font-medium">Tỷ lệ sinh</span>
@@ -144,7 +141,7 @@ export default function PopulationDynamicsAI() {
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
                       <div className="text-sm text-gray-600 mb-2">Tổng Dân Số</div>
-                      <div className="text-3xl font-bold text-blue-600">{(currentData.population / 1e6).toFixed(1)} triệu</div>
+                      <div className="text-3xl font-bold text-blue-600">{(currentData.population / 1000000).toFixed(1)} triệu</div>
                     </div>
                     <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
                       <div className="text-sm text-gray-600 mb-2">Tăng Trưởng</div>
@@ -165,7 +162,7 @@ export default function PopulationDynamicsAI() {
                           cx="50%" cy="50%" labelLine={false}
                           label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
                           outerRadius={80} dataKey="value">
-                          {COLORS.map((color, index) => (<Cell key={`cell-${index}`} fill={color} />))}
+                          {['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'].map((color, index) => (<Cell key={`cell-${index}`} fill={color} />))}
                         </Pie>
                         <Tooltip />
                       </PieChart>
@@ -174,7 +171,7 @@ export default function PopulationDynamicsAI() {
                 </div>
               )}
 
-              {activeTab === 'forecast' && (
+              {activeTab === 'forecast' && forecastData.length > 0 && (
                 <ForecastChart
                   data={forecastData}
                   currentPopulation={currentData.population}
@@ -190,7 +187,7 @@ export default function PopulationDynamicsAI() {
                 <ComparisonCharts comparisonData={comparisonData} />
               )}
 
-              {activeTab === 'model' && aiModel?.isTrained && (
+              {activeTab === 'model' && aiModel && aiModel.isTrained && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">Mô Hình XGBoost</h2>
                   <div className="grid grid-cols-2 gap-4 mb-6">

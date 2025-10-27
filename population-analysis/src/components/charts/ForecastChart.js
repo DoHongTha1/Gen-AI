@@ -27,7 +27,7 @@ export default function ForecastChart({ data, currentPopulation, targetYear }) {
       <div className="grid grid-cols-3 gap-4 mt-6">
         <div className="bg-blue-50 p-4 rounded-lg text-center">
           <div className="text-sm text-gray-600">Hiện tại</div>
-          <div className="text-2xl font-bold text-blue-600">{(currentPopulation / 1e6).toFixed(1)}M</div>
+          <div className="text-2xl font-bold text-blue-600">{(currentPopulation / 1000000).toFixed(1)}M</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg text-center">
           <div className="text-sm text-gray-600">Năm {targetYear}</div>
@@ -36,7 +36,7 @@ export default function ForecastChart({ data, currentPopulation, targetYear }) {
         <div className="bg-purple-50 p-4 rounded-lg text-center">
           <div className="text-sm text-gray-600">Thay đổi</div>
           <div className="text-2xl font-bold text-purple-600">
-            {(((data[data.length - 1].population - currentPopulation / 1e6) / (currentPopulation / 1e6)) * 100).toFixed(1)}%
+            {(((data[data.length - 1].population - currentPopulation / 1000000) / (currentPopulation / 1000000)) * 100).toFixed(1)}%
           </div>
         </div>
       </div>
