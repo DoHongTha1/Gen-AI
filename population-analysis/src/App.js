@@ -495,7 +495,7 @@ const PopulationDynamicsAI = () => {
           <header className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Globe className="w-12 h-12 text-indigo-600" />
-              <h1 className="text-4xl font-bold text-gray-800">AI Phân Tích Dân Số </h1>
+              <h1 className="text-4xl font-bold text-gray-800">Mô Hình Phân Tích Dân Số </h1>
             </div>
             <p className="text-gray-600 text-lg">Machine Learning dự báo dân số </p>
             
