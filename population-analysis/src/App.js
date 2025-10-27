@@ -465,7 +465,7 @@ const PopulationDynamicsAI = () => {
     if (aiModel && aiModel.trainingMetrics) {
       const metrics = aiModel.trainingMetrics;
       insights.push(`🤖 Mô hình AI với ${aiModel.numTrees} cây quyết định đã huấn luyện thành công`);
-      insights.push(`📊 Độ chính xác R²: ${(metrics.r2 * 100).toFixed(1)}% - ${metrics.r2 > 0.8 ? 'Cao' : metrics.r2 > 0.6 ? 'Tốt ✓' : 'Chấp nhận được'}`);
+      insights.push(`📊 Độ chính xác R²: ${(metrics.r2 * 100).toFixed(1)}% - ${metrics.r2 > 0.8 ? 'Độ chính xác cao' : metrics.r2 > 0.6 ? 'Tốt ✓' : 'Chấp nhận được'}`);
       insights.push(`⚡  RMSE: ${metrics.rmse.toFixed(3)}% - Sai số trung bình trong dự báo`);
     }
     const finalPop = forecastData.length > 0 ? forecastData[forecastData.length - 1].population : 0;
